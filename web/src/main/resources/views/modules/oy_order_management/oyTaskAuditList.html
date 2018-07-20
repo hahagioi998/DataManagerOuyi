@@ -1,0 +1,92 @@
+<% layout('/layouts/default.html', {title: '下单管理', libs: ['dataGrid']}){ %>
+<div class="main-content">
+	<div class="box box-main">
+		<div class="box-header">
+			<div class="box-title">
+				<i class="fa fa-list-alt"></i> ${text('下单管理')}
+			</div>
+			<div class="box-tools pull-right">
+				<a href="#" class="btn btn-default" id="btnSearch" title="${text('查询')}"><i class="fa fa-filter"></i> ${text('查询')}</a>
+				<% if(hasPermi('oy_order_management:oyTaskAudit:edit')){ %>
+				<a href="${ctx}/oy_order_management/oyTaskAudit/form" class="btn btn-default btnTool" title="${text('新增订单')}"><i class="fa fa-plus"></i> ${text('新增')}</a>
+				<% } %>
+			</div>
+		</div>
+		<div class="box-body">
+			<#form:form id="searchForm" model="${oyTaskAudit}" action="${ctx}/oy_order_management/oyTaskAudit/listData" method="post" class="form-inline hide"
+					data-page-no="${parameter.pageNo}" data-page-size="${parameter.pageSize}" data-order-by="${parameter.orderBy}">
+				<div class="form-group">
+					<label class="control-label">数据量：</label>
+					<div class="control-inline">
+						<#form:input path="dataSize" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">运营商：</label>
+					<div class="control-inline">
+						<#form:checkbox path="crop" items="${corpList}" itemLabel="name" itemValue="name" class="form-control" />
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">审核状态：</label>
+					<div class="control-inline">
+						<#form:input path="auditStatus" maxlength="64" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">短信内容：</label>
+					<div class="control-inline">
+						<#form:input path="messageText" maxlength="255" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<label class="control-label">备注信息：</label>
+					<div class="control-inline">
+						<#form:input path="remarks" maxlength="500" class="form-control width-120"/>
+					</div>
+				</div>
+				<div class="form-group">
+					<button type="submit" class="btn btn-primary btn-sm">${text('查询')}</button>
+					<button type="reset" class="btn btn-default btn-sm">${text('重置')}</button>
+				</div>
+			</#form:form>
+			<table id="dataGrid"></table>
+			<div id="dataGridPage"></div>
+		</div>
+	</div>
+</div>
+<% } %>
+<script>
+    // 初始化DataGrid对象
+    $('#dataGrid').dataGrid({
+        searchForm: $("#searchForm"),
+        columnModel: [
+            {header:'订单客户', name:'oyClient.name', index:'a.oyClient.name', width:150, align:"center", frozen:true, formatter: function(val, obj, row, act){
+                return '<a href="${ctx}/oyclient/oyClient/form?id='+row.clientId+'" class="btnList" data-title="${text('编辑订单')}">'+(val||row.id)+'</a>';
+            }},
+            {header:'数据量', name:'dataSize', index:'a.data_size', width:150, align:"center", formatter: function(val, obj, row, act){
+                return js.formatNumber(val, 0, false, ''); // 数值类型格式化 (原始数值, 小数位数, 是否千分位, 默认值，金额情况下设置0.00);
+            }},
+            {header:'运营商', name:'crop', index:'a.crop', width:150, align:"center"},
+            {header:'审核状态', name:'auditStatus', index:'a.audit_status', width:150, align:"center"},
+            {header:'发送账号', name:'oySendAccount.account', index:'a.oySendAccount.account', width:150, align:"center", frozen:true, formatter: function(val, obj, row, act){
+                return '<a href="${ctx}/oysendaccount/oySendAccount/form?id='+row.acountId+'" class="btnList" data-title="${text('编辑发送账号')}">'+(val||row.id)+'</a>';
+            }},
+            {header:'短信内容', name:'messageText', index:'a.message_text', width:150, align:"center"},
+            {header:'创建时间', name:'createDate', index:'a.create_date', width:150, align:"center"},
+            {header:'备注信息', name:'remarks', index:'a.remarks', width:150, align:"center"},
+            {header:'${text('操作')}', name:'actions', width:120, sortable:false, title:false, formatter: function(val, obj, row, act){
+                var actions = [];
+            <% if(hasPermi('oy_order_management:oyTaskAudit:edit')){ %>
+                    actions.push('<a href="${ctx}/oy_order_management/oyTaskAudit/form?id='+row.id+'" class="btnList" title="${text('编辑订单')}"><i class="fa fa-pencil"></i></a>&nbsp;');
+                    actions.push('<a href="${ctx}/oy_order_management/oyTaskAudit/delete?id='+row.id+'" class="btnList" title="${text('删除订单')}" data-confirm="${text('确认要删除该订单吗？')}"><i class="fa fa-trash-o"></i></a>&nbsp;');
+                <% } %>
+                return actions.join('');
+            }}
+        ],
+        // 加载成功后执行事件
+        ajaxSuccess: function(data){
+
+        }
+    });
+</script>

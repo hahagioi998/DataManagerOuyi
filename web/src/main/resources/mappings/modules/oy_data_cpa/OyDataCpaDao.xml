@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.jeesite.modules.oy_data_cpa.dao.OyDataCpaDao">
+
+    <!-- 查询数据
+    <select id="findList" resultType="OyDataCpa">
+        SELECT ${sqlMap.column.toSql()}
+        FROM ${sqlMap.table.toSql()}
+        <where>
+            ${sqlMap.where.toSql()}
+        </where>
+        ORDER BY ${sqlMap.order.toSql()}
+    </select> -->
+
+
+    <!-- 查询七天前不包含某客户的数据 -->
+    <select id="findListByClientNameAndUpdateDate" statementType="STATEMENT" parameterType="java.util.HashMap"
+            resultType="java.lang.String">
+        SELECT phone_num FROM oy_data_${crop}
+        <where>
+            1 = 1
+            <if test="client_name!=null and !&quot;&quot;.equals(client_name.trim)">
+                AND client_name not like CONCAT('%','${client_name}','%' )
+            </if>
+            <if test="update_date!=null">
+                AND update_date &lt; (CURDATE()-${update_date})
+            </if>
+        </where>
+        limit ${offset},${number}
+    </select>
+
+    <!-- 批量更新数据-->
+    <update id="batchUpdate" statementType="STATEMENT" parameterType="java.util.HashMap">
+        <choose>
+            <when test="phone.size() > 0">
+                UPDATE oy_data_${crop} SET client_name = concat(client_name,',${client_name}')
+                <where>
+                    phone_num in
+                    <foreach collection="phone" index="index" item="item" open="(" separator="," close=")">
+                        '${item}'
+                    </foreach>
+                </where>
+            </when>
+            <otherwise>
+                SELECT 1=1;
+            </otherwise>
+        </choose>
+
+    </update>
+
+    <!-- 查询条数 -->
+    <select id="countTotal" statementType="STATEMENT" parameterType="java.util.HashMap" resultType="int">
+        SELECT COUNT(*) FROM oy_data_${crop}
+        <where>
+            1 = 1
+            <if test="client_name!=null and !&quot;&quot;.equals(client_name.trim)">
+                AND client_name not like CONCAT('%','${client_name}','%' )
+            </if>
+            <if test="update_date!=null">
+                AND update_date &lt; (CURDATE()-${update_date})
+            </if>
+        </where>
+    </select>
+</mapper>
